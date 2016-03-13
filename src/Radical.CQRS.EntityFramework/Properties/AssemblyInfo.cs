@@ -11,13 +11,3 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("4dd2d422-6754-42e9-9ca9-44d2b0213efb")]
-
-[assembly: AssemblyVersion( Consts.version )]
-[assembly: AssemblyFileVersion( Consts.version )]
-[assembly: AssemblyInformationalVersion( Consts.version + Consts.preRelease )]
-
-class Consts
-{
-    public const string version = "0.1.1";
-    public const string preRelease = "-RC1";
-}

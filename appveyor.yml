@@ -1,0 +1,40 @@
+#
+#     DEVELOPMENT BRANCH
+#
+# build in Debug mode and deploy as pre-release
+
+branches:
+  only:
+    - develop
+
+configuration: Debug
+platform: Any CPU
+
+environment:
+  use_build_number_in_packages: true
+
+artifacts:
+  - path: src\build\Debug
+  - path: src\build\nuget\*.nupkg
+
+cache:
+  - src\packages -> src\**\packages.config
+
+before_build:
+  - nuget restore "src\Radical.CQRS.EntityFramework.sln"
+
+
+build:
+  project: src\Radical.CQRS.EntityFramework.sln
+  verbosity: minimal
+
+after_build:
+  - md "src\build\nuget"
+  - nuget pack "src\Radical.CQRS.EntityFramework.nuspec" -Version "%GitVersion_NuGetVersion%" -Properties "configuration=%CONFIGURATION%" -OutputDirectory "src\build\nuget"
+
+pull_requests:
+  do_not_increment_build_number: true
+
+deploy:
+  provider: Environment
+  name: NuGet public feed
