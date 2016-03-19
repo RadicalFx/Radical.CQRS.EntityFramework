@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic;
+using System.Linq.Expressions;
 
 namespace Radical.CQRS.Services
 {
@@ -13,11 +14,15 @@ namespace Radical.CQRS.Services
             var db = session.Set(stateType);
             if(aggregateQuery.Version.HasValue)
             {
-                var specificState = db.Where( "Id = @0 AND Version = @1", aggregateQuery.Id, aggregateQuery.Version)
-                    .OfType<IAggregateState>()
-                    .SingleOrDefault();
+                var specificStateQuery = db.Where("Id.Equals(@0) AND Version = @1", aggregateQuery.Id, aggregateQuery.Version);
 
-                return specificState;
+                var specificState = specificStateQuery.Provider.Execute(
+                    Expression.Call(
+                        typeof(Queryable), "SingleOrDefault",
+                        new Type[] { specificStateQuery.ElementType },
+                        specificStateQuery.Expression));
+
+                return (IAggregateState)specificState;
             }
 
             var state = db.Find(aggregateQuery.Id);
@@ -45,12 +50,15 @@ namespace Radical.CQRS.Services
                 }
             }
 
-            var queryText = string.Join( " OR ", querySegments );
+            var queryText = string.Join(" OR ", querySegments);
 
             var db = session.Set(stateType);
-            var results = db.Where(queryText).OfType<IAggregateState>();
+            var results = db.Where(queryText);
 
-            return results;
+            foreach(var item in results)
+            {
+                yield return (IAggregateState)item;
+            }
         }
 
         //public IAggregateState FindById(DomainContext session, Type stateType, Guid stateId)
