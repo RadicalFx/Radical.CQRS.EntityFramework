@@ -13,10 +13,12 @@ namespace Radical.CQRS.Data
 {
 	public abstract class DomainContext : DbContext
 	{
-		protected DomainContext()
-		{
+        readonly DbSet<EntityFrameworkDomainEventCommit> _domainEventCommits;
 
-		}
+        protected DomainContext()
+		{
+            _domainEventCommits = this.Set<EntityFrameworkDomainEventCommit>();
+        }
 
 		protected override void OnModelCreating( DbModelBuilder modelBuilder )
 		{
@@ -24,7 +26,12 @@ namespace Radical.CQRS.Data
 			modelBuilder.MapPropertiesOf<EntityFrameworkDomainEventCommit>( propertiesToSkip: new[] { "Event" } );
 		}
 
-		protected Expression<Func<T, Object>> Skip<T>( Expression<Func<T, Object>> property )
+        public IQueryable<DomainEventCommit> DomainEventCommits
+        {
+            get { return _domainEventCommits; }
+        }
+
+        protected Expression<Func<T, Object>> Skip<T>( Expression<Func<T, Object>> property )
 		{
 			return property;
 		}
@@ -67,7 +74,7 @@ namespace Radical.CQRS.Data
 
 			if( typeof( T ).Is<IAggregate>() )
 			{
-				if( skipAggregateIsChangedProperty ) 
+				if( skipAggregateIsChangedProperty )
 				{
 					toSkip.Add( ReflectionHelper.GetPropertyName<IAggregate>( a => a.IsChanged ) );
 				}
